@@ -8,50 +8,50 @@
  * ensuring we have valid settings to use the page
  */
 class MinimalSettingsSolver extends Solver {
-    
+
     private $sql;
     private $ic;
     private $error = array();
     private $url = null;
     private $protocol = null;
     private $admin_mail = null;
-    
+
     public function __construct($ic, $sql) {
         $this->ic = $ic;
         $this->sql = $sql;
     }
-    
+
     // access on url data
     public function getUrl() {
         return $this->url;
     }
     public function getProtocol() {
         return $this->protocol;
-    }    
+    }
     public function getAdminMail() {
         return $this->admin_mail;
-    }    
-    
-    /* Default tests & solutions */             
+    }
+
+    /* Default tests & solutions */
     public function getDefaultTests() {
         return $this->getTests();
-    }    
+    }
     public function getDefaultSolutions() {
         return $this->getSolutions();
-    } 
-    
-    
+    }
+
+
     // test for existing admin
     public function testDataSaved() {
         return isset($_SESSION['minimal_settings']);
     }
-    
-    
+
+
     // solvers
     public function solutionSufficientVersion() {
 		if (InstallerFunctions::compareFS2Versions(UPGRADE_FROM, '2.alix6') >= 0) {
 			$_SESSION['minimal_settings'] = true;
-            
+
             //save important data to class
             $main = $this->sql->getFieldById('config', 'config_data', 'main', 'config_name');
             $main = InstallerFunctions::json_array_decode($main);
@@ -62,18 +62,18 @@ class MinimalSettingsSolver extends Solver {
 		}
 		return false;
 	}
-	
+
     public function solutionSaveSettingsFromPost() {
 		// unset error
 		$this->error = array();
-		     
+
         // check post and Save to File
         if (isset($_POST['minimal_settings'])) {
-            
+
 			// check errors
 			if (!(isset($_POST['title']) && trim($_POST['title']) != '')) {
 				$this->error[] = 'title';
-			} 
+			}
 			if (!(isset($_POST['url']) && trim($_POST['url']))
                 || !(isset($_POST['protocol']) && trim($_POST['protocol']))) {
 				$this->error[] = 'url';
@@ -86,32 +86,32 @@ class MinimalSettingsSolver extends Solver {
 			}
 			if (!(isset($_POST['timezone']) && trim($_POST['timezone']) != '')) {
 				$this->error[] = 'timezone';
-			} 
+			}
 
 			// quit on form error;
 			if (!empty($this->error)) {
 				return false;
 			}
-            
+
             // kick any wrong values
             $data = array('title' => null, 'protocol' => null, 'url' => null, 'admin_mail' => null, 'url_style' => null, 'timezone' => null);
             $_POST = array_intersect_key($_POST, $data);
-            
+
             // add trailing slash to url
             if (substr($_POST['url'], -1) != '/') {
                 $_POST['url'] = $_POST['url'].'/';
             }
 
-			// update data           
+            // update data
             $main = $this->sql->getFieldById('config', 'config_data', 'main', 'config_name');
             $main = InstallerFunctions::json_array_decode($main);
             $main = InstallerFunctions::json_array_encode($_POST+$main);
-            
+
             //save to class
             $this->url = $_POST['url'];
             $this->protocol = $_POST['protocol'];
             $this->admin_mail = $_POST['admin_mail'];
-            
+
             $this->sql->save('config', array('config_name' => 'main', 'config_data' => $main), 'config_name', false);
             $_SESSION['minimal_settings'] = true;
             return true;
@@ -147,14 +147,14 @@ class MinimalSettingsSolver extends Solver {
 			$this->ic->addCond('form_error', true);
 			$this->ic->addText('settings_form_error', implode('<br>'.PHP_EOL, $errors));			
 		}
- 
+
         //prefill form
         $data = array('title' => null, 'protocol' => null, 'url' => null, 'admin_mail' => null, 'url_style' => null, 'timezone' => null);
 
         // from post
-        if (isset($_POST['minimal_settings'])) {       
+        if (isset($_POST['minimal_settings'])) {
             $data = InstallerFunctions::killhtml(array_intersect_key($_POST, $data)) + $data;
-            
+
         // from database
         } else {
             $main = $this->sql->getFieldById('config', 'config_data', 'main', 'config_name');
@@ -162,7 +162,7 @@ class MinimalSettingsSolver extends Solver {
             $data = array_intersect_key($main, $data) + $data;
 
             // guess url if empty
-            if(empty($data['url'])) {                
+            if(empty($data['url'])) {
                 // guess from install_to
                 // strip non web available part from install_to, append rest du serverroot
                 $server_root = realpath(str_replace($_SERVER['PHP_SELF'], '', $_SERVER['SCRIPT_FILENAME']));
@@ -170,15 +170,15 @@ class MinimalSettingsSolver extends Solver {
                 if (false !== $server_root && false !== $install_to) {
                     $scriptpath = str_replace($server_root, '',  $install_to);
                     $scriptpath = str_replace(array('\\', '//'), '/', $scriptpath);
-                } 
-                
+                }
+
                 // guess one folder up
                 else {
                     $scriptlist = explode('/',$_SERVER['PHP_SELF']);
                     $scriptname = end($scriptlist);
                     $scriptpath = str_replace('/'.INSTALLER_FOLDER.'/'.$scriptname,'',$_SERVER['PHP_SELF']);
                 }
-                
+
                 // guess direct in domain
                 if ($scriptpath == @dirname($_SERVER['PHP_SELF'])) {
                     $scriptpath = "";
@@ -187,35 +187,35 @@ class MinimalSettingsSolver extends Solver {
                 // prefill
                 $data['url'] = $_SERVER['SERVER_NAME'].$scriptpath;
             }
-            
+
             // guess admin_mail if empty
             if(empty($data['admin_mail'])) {
                 $mail = $this->sql->getFieldById('user', 'user_mail', 1, 'user_id');
-                if (!empty($mail)) 
+                if (!empty($mail))
                     $data['admin_mail'] = $mail;
             }
-            
+
             // guess timezone if empty
             if(empty($data['timezone'])) {
                 $data['timezone'] = @date_default_timezone_get(); // in worst case this is UTC
             }
         }
-        
+
         // add trailing slash to url
         if (substr($data['url'], -1) != '/') {
             $data['url'] = $data['url'].'/';
-        }        
-        
+        }
+
 		// show stuff
-        $data = InstallerFunctions::killhtml($data);  
+        $data = InstallerFunctions::killhtml($data);
         $this->ic->addText('title', $data['title']);
         $this->ic->addCond('protocol_http', $data['protocol'] === 'http://');
         $this->ic->addCond('protocol_https', $data['protocol'] === 'https://');
         $this->ic->addText('url', $data['url']);
         $this->ic->addText('admin_mail', $data['admin_mail']);
         $this->ic->addCond('url_style_default', $data['url_style'] === 'default');
-        $this->ic->addCond('url_style_seo', $data['url_style'] === 'seo');        
-        
+        $this->ic->addCond('url_style_seo', $data['url_style'] === 'seo');
+
         //timezones
         $timezone_options = '<option value="UTC"'.('UTC' == $data['timezone']?'selected':'').'>UTC</option>'.PHP_EOL;
         foreach(InstallerFunctions::get_timezones() as $timezone => $val) {
@@ -223,11 +223,11 @@ class MinimalSettingsSolver extends Solver {
                 .($timezone == $data['timezone']?'selected':'')
                 .'>'.$timezone.'</option>'.PHP_EOL;
         }
-        $this->ic->addText('timezones', $timezone_options);        
-        
+        $this->ic->addText('timezones', $timezone_options);
+
         print $this->ic->get('settings');
         return false;
-    }        
+    }
 }
 
 ?>

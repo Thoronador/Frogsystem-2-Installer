@@ -11,7 +11,7 @@
 
 class InstallerLang extends lang
 {
-   
+
     // constructor
     public function  __construct ($local, $type = false) {
         $this->local = $local;
@@ -19,15 +19,15 @@ class InstallerLang extends lang
         if ($type !== false)
             $this->setType($type);
     }
-    
+
     // function to assign phrases to tags
     protected function add($tag, $text) {
         $this->phrases[$tag] = $text;
     }
-    
+
     // function to extend a phrase
     protected function extend($tag, $text) {
         $this->phrases[$tag] = $this->phrases[$tag].$text;
-    }        
+    }
 }
 ?>

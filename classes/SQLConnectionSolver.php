@@ -102,7 +102,7 @@ class SQLConnectionSolver extends Solver {
                 'host' => $config['DB_HOST'],
                 'user' => $config['DB_USER'],
                 'pass' => $config['DB_PASSWORD'],
-                'data' => $config['DB_NAME'], 
+                'data' => $config['DB_NAME'],
                 'pref' => $config['DB_PREFIX'],
             );
             unset($config);

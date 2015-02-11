@@ -11,7 +11,7 @@ class UnslasherData extends StdClass {
     public $name;
     public $id;
     public $fields = array();
-    
+
     public function __construct($_name, $_id, $_fields) {
         $this->name = $_name;
         $this->id = $_id;
@@ -20,18 +20,18 @@ class UnslasherData extends StdClass {
 }
 
 class UnslasherRunner extends Runner  {
-    
+
     private $sql;
     private $tables;
     private $limit = 30;
-    
+
     public function __construct($sql) {
         // call parent __construct
         parent::__construct();
-        
+
         // create sql connection
         $this->sql = $sql;
-        
+
         // default data
         $this->tables = array (
             new UnslasherData('aliases', 'alias_id', array('alias_go', 'alias_forward_to')),
@@ -64,7 +64,7 @@ class UnslasherRunner extends Runner  {
             new UnslasherData('user_groups', 'user_group_id', array('user_group_name', 'user_group_description', 'user_group_title')),
             new UnslasherData('wallpaper', 'wallpaper_id', array('wallpaper_name', 'wallpaper_title')),
             new UnslasherData('wallpaper_sizes', 'size_id', array('size')),
-            
+
             new UnslasherData('config', 'config_name', array('config_data')),
             new UnslasherData('captcha_config', 'id', array('captcha_font_file')),
             new UnslasherData('dl_config', 'id', array('quickinsert')),
@@ -73,22 +73,22 @@ class UnslasherRunner extends Runner  {
             new UnslasherData('player_config', 'id', array('cfg_buffermessage', 'cfg_top1_url')),
             new UnslasherData('user_config', 'id', array('reg_date_format', 'user_list_reg_date_format')),
         );
-        
+
         // create filelist
         $this->load();
     }
-    
+
     public function load() {
         foreach ($this->tables as $table) {
             $this->addInstruction($table);
         }
-    }    
+    }
 
 
     protected function runInstruction($table) {
         if (!isset($_SESSION['unslasher_start']))
             $_SESSION['unslasher_start'] = 0;
-        
+
         try {
             // get data
             $cols = $table->fields;
@@ -106,7 +106,7 @@ class UnslasherRunner extends Runner  {
             $_SESSION['unslasher_start'] = 0;
             throw $e;
         }
-        
+
         // return true if done
         if ($data['num'] < $this->limit) {
             $_SESSION['unslasher_start'] = 0;
@@ -116,12 +116,12 @@ class UnslasherRunner extends Runner  {
             return false;
         }
     }
-    
-    
+
+
     protected function getInfo($table) {
         if (!isset($_SESSION['unslasher_start']))
             $_SESSION['unslasher_start'] = 0;
-            
+
         return array($this->sql->getPrefix().$table->name, $_SESSION['unslasher_start'], $this->limit);
     }
 }

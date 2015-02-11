@@ -8,7 +8,7 @@
  * ensuring we have a valid superadmin
  */
 class AdminSolver extends Solver {
-    
+
     private $sql;
     private $ic;
     private $error = array();
@@ -16,20 +16,20 @@ class AdminSolver extends Solver {
     private $user = null;
     private $mail = null;
     private $password = null;
-    
+
     public function __construct($ic, $sql) {
         $this->ic = $ic;
         $this->sql = $sql;
     }
-    
-    /* Default tests & solutions */             
+
+    /* Default tests & solutions */
     public function getDefaultTests() {
         return array('testAdminExists');
-    }    
+    }
     public function getDefaultSolutions() {
         return $this->getSolutions();
-    } 
-    
+    }
+
     // access on admin data
     public function isNew() {
         return $this->isNew;
@@ -43,46 +43,46 @@ class AdminSolver extends Solver {
     public function getPassword() {
         return $this->password;
     }
-    
+
     // test for existing admin
     public function testAdminExists() {
         $id = $this->sql->getFieldById('user', 'user_id', 1, 'user_id');
         if (empty($id))
             return false;
-        
+
         return true;
     }
-    
+
     public function testUserExists($name) {
 		if (empty($name))
             return false;
-            
+
         $id = $this->sql->getFieldById('user', 'user_id', $name, 'user_name');
         if (empty($id))
             return true;
-        
+
         return false;
     }
-    
+
     public function testMailExists($mail) {
 		if (empty($mail))
             return false;
-            
+
         $id = $this->sql->getFieldById('user', 'user_id', $mail, 'user_mail');
         if (empty($id))
             return true;
-        
+
         return false;
     }
-    
+
     // solvers
     public function solutionSaveAdminFromPost() {
 		// unset error
 		$this->error = array();
-		     
+
         // check post and Save to File
         if (isset($_POST['setup_admin'])) {
-			
+
 			// check errors
 			if (!(isset($_POST['user']) && trim($_POST['user']) != '' && strlen(trim($_POST['user'])) > 4)) {
 				$this->error[] = 'user';
@@ -102,13 +102,13 @@ class AdminSolver extends Solver {
 			if (!empty($this->error)) {
 				return false;
 			}
-            
+
             // save in class
             $this->isNew = true;
             $this->user = $_POST['user'];
             $this->mail = $_POST['mail'];
             $this->password = $_POST['pass'];
-            
+
 			// create dataset
             $salt = InstallerFunctions::getRandomCode(10);
 			$pass = md5 ( $_POST['pass'].$salt );
@@ -122,7 +122,7 @@ class AdminSolver extends Solver {
                 'user_group' => 1,
                 'user_is_admin' => 1,
                 'user_reg_date' => time()));
-                
+
 			$this->sql->doQuery('UPDATE {..pref..}user SET `user_id` = 1 WHERE `user_id` = '.$id);
             return true;
         }
@@ -156,7 +156,7 @@ class AdminSolver extends Solver {
 			$this->ic->addCond('form_error', true);
 			$this->ic->addText('superadmin_form_error', implode('<br>'.PHP_EOL, $errors));			
 		}
-		
+
         //prefill form
         if (isset($_POST['setup_admin'])) {
             $data = array('user' => null, 'pass' => null, 'mail' => null);
@@ -168,7 +168,7 @@ class AdminSolver extends Solver {
 
         print $this->ic->get('superadmin');
         return false;
-    }        
+    }
 }
 
 ?>

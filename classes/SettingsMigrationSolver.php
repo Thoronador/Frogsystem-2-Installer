@@ -8,26 +8,26 @@
  * migrate existing settings from updated versions
  */
 class SettingsMigrationSolver extends PairSolver {
-    
+
     private $sql;
     private $version;
     private $configs = array(
-		'affiliatesConfig', 'articlesConfig', 'captchaConfig', 'downloadsConfig', 'galleryConfig', 
-		'groupsConfig', 'mainConfig', 'newsConfig', 'pollsConfig', 'pressConfig', 'previewImagesConfig', 
+		'affiliatesConfig', 'articlesConfig', 'captchaConfig', 'downloadsConfig', 'galleryConfig',
+		'groupsConfig', 'mainConfig', 'newsConfig', 'pollsConfig', 'pressConfig', 'previewImagesConfig',
 		'searchConfig', 'usersConfig', 'videoPlayerConfig',
         'systemConfig', 'envConfig', 'infoConfig', 'cronjobsConfig', 'socialMetaTagsConfig',
         'version'
 	);
-    
+
     public function __construct($sql) {
         $this->sql = $sql;
     }
-    
-    /* Default tests & solutions */             
+
+    /* Default tests & solutions */
     public function getDefaultPairs() {
         return $this->configs;
     }
-    
+
     // test for old configs
     public function testAffiliatesConfig() {
 		return $this->genericConfigTester('affiliates');
@@ -46,7 +46,7 @@ class SettingsMigrationSolver extends PairSolver {
     }
     public function testGroupsConfig() {
 		return $this->genericConfigTester('groups');
-    }   
+    }
     public function testMainConfig() {
 		return $this->genericConfigTester('main');
     }
@@ -86,18 +86,18 @@ class SettingsMigrationSolver extends PairSolver {
     public function testSocialMetaTagsConfig() {
 		return $this->genericConfigTester('social_meta_tags');
     }
-    
+
     // test version
     public function testVersion() {
         $config = $this->sql->getFieldById('config', 'config_data', 'main', 'config_name');
         if (empty($config))
             return false;
-        
+
         $config = InstallerFunctions::json_array_decode($config);
         return ($config['version'] == UPGRADE_TO);
     }
-    
-    
+
+
     // solutions
     public function solutionAffiliatesConfig() {
         return $this->genericMigrateConfig('affiliates', 'none', array(), 'partner_config');
@@ -109,21 +109,21 @@ class SettingsMigrationSolver extends PairSolver {
         return $this->genericMigrateConfig('captcha', 'none', array(), 'captcha_config');
     }
     public function solutionDownloadsConfig() {
-        return $this->genericMigrateConfig('downloads', 'none', array(), 'dl_config');        
+        return $this->genericMigrateConfig('downloads', 'none', array(), 'dl_config');
     }
     public function solutionGalleryConfig() {
-        return $this->genericMigrateConfig('screens', 'none', array(), 'screen_config'); 
+        return $this->genericMigrateConfig('screens', 'none', array(), 'screen_config');
     }
     public function solutionGroupsConfig() {
-        return $this->genericMigrateConfig('groups', 'none', array(), 'user_config'); 
-    }   
+        return $this->genericMigrateConfig('groups', 'none', array(), 'user_config');
+    }
     public function solutionMainConfig() { //todo
         $config = array();
-        
+
         // alix5 and lowe
         if ($this->tableExists('global_config')) {
             $config = $this->sql->getById('global_config', '*', 1);
-            
+
             // url slash & leading http://
             $config['url'] = $config['virtualhost'];
             if (substr($config['url'], -1) != '/') {
@@ -132,44 +132,44 @@ class SettingsMigrationSolver extends PairSolver {
             if (substr($config['url'], 0, 8) == 'https://') {
                 $config['url'] = substr($config['url'], 8);
                 $config['protocol'] = 'https://';
-            }             
+            }
             elseif (substr($config['url'], 0, 7) == 'http://') {
                 $config['url'] = substr($config['url'], 7);
                 $config['protocol'] = 'http://';
             } else {
                 $config['protocol'] = 'http://';
             }
-            
+
             //set lang
             $config['language_text'] = InstallerFunctions::detect_language();
-            
+
             //set style_id
             if(isset($config['style_tag'])) {
                 if (false !== $style_id = $this->sql->getFieldById('styles', 'style_id', $config['style_tag'], 'style_tag')) {
                     $config['style_id'] = $style_id;
                 }
             }
-            
+
             //update dyn title
-            $config['dyn_title_ext'] = str_replace(array('{title}', '{ext}'), array('{..title..}', '{..ext..}'), $config['dyn_title_ext']);      
-        
+            $config['dyn_title_ext'] = str_replace(array('{title}', '{ext}'), array('{..title..}', '{..ext..}'), $config['dyn_title_ext']);
+
             // not possible in property
             $server_timezone = @date_default_timezone_get();
             if (false !== $server_timezone && (!isset($config['timezone']) || empty($config['timezone']))) {
                 $config['timezone'] = $server_timezone;
             }
         }
-        
-        return $this->genericMigrateConfig('main', 'startup', $config, false);         
+
+        return $this->genericMigrateConfig('main', 'startup', $config, false);
     }
     public function solutionNewsConfig() {
-        return $this->genericMigrateConfig('news', 'none', array(), 'news_config');         
+        return $this->genericMigrateConfig('news', 'none', array(), 'news_config');
     }
     public function solutionPollsConfig() {
-        return $this->genericMigrateConfig('polls', 'none', array(), 'poll_config');          
+        return $this->genericMigrateConfig('polls', 'none', array(), 'poll_config');
     }
     public function solutionPressConfig() {
-        return $this->genericMigrateConfig('press', 'none', array(), 'press_config');          
+        return $this->genericMigrateConfig('press', 'none', array(), 'press_config');
     }
     public function solutionPreviewImagesConfig() {
         $config = array();
@@ -179,27 +179,27 @@ class SettingsMigrationSolver extends PairSolver {
                 $config['timed_deltime'] = $timed_deltime;
         }
 
-        return $this->genericMigrateConfig('preview_images', 'none', $config, 'screen_random_config');              
+        return $this->genericMigrateConfig('preview_images', 'none', $config, 'screen_random_config');
     }
     public function solutionSearchConfig() {
-        return $this->genericMigrateConfig('search', 'none', array(), 'search_config');              
+        return $this->genericMigrateConfig('search', 'none', array(), 'search_config');
     }
     public function solutionUsersConfig() {
-        return $this->genericMigrateConfig('users', 'none', array(), 'user_config');          
+        return $this->genericMigrateConfig('users', 'none', array(), 'user_config');
     }
     public function solutionVideoPlayerConfig() {
         // prepend colors with #
         $converter = function(&$value, $key) {
             $colors = array('cfg_buffercolor','cfg_bufferbgcolor','cfg_titlecolor','cfg_playercolor','cfg_loadingcolor','cfg_bgcolor','cfg_bgcolor1','cfg_bgcolor2','cfg_buttoncolor','cfg_buttonovercolor','cfg_slidercolor1','cfg_slidercolor2','cfg_sliderovercolor','cfg_videobgcolor','cfg_iconplaycolor','cfg_iconplaybgcolor');
-            
+
             if (in_array($key, $colors)) {
                 $value = '#'.$value;
             }
         };
-        
-        return $this->genericMigrateConfig('video_player', 'none', array(), 'player_config', $converter);          
+
+        return $this->genericMigrateConfig('video_player', 'none', array(), 'player_config', $converter);
     }
-    
+
     public function solutionSystemConfig() {
         return $this->genericMigrateConfig('system', 'startup');
     }
@@ -215,8 +215,8 @@ class SettingsMigrationSolver extends PairSolver {
     public function solutionSocialMetaTagsConfig() {
         return $this->genericMigrateConfig('social_meta_tags');
     }
-    
-    
+
+
     // version solution
     public function solutionVersion() {
         $main = $this->sql->getFieldById('config', 'config_data', 'main', 'config_name');
@@ -225,57 +225,57 @@ class SettingsMigrationSolver extends PairSolver {
         $main = InstallerFunctions::json_array_encode($main);
         return $this->sql->save('config', array('config_name' => 'main', 'config_data' => $main), 'config_name', false);
     }
-    
-    
-    
-	// generic config tester
+
+
+
+    // generic config tester
     private function genericConfigTester($name) {
         $config = $this->sql->getFieldById('config', 'config_data', $name, 'config_name');
         if (empty($config))
             return false;
-        
+
         $config = InstallerFunctions::json_array_decode($config);
         $defaultConfig = $name.'Config';
         if (0 < count(array_diff_key($this->$defaultConfig, $config))) // any new default keys not present in current config
             return false;
         if (0 < count(array_diff_key($config, $this->$defaultConfig))) // any old keys not longer present in current config
             return false;
-        
+
         return true;
     }
-    
+
     // generic migrate config
     public function genericMigrateConfig($name, $loadhook = 'none', $important = array(), $oldname = false, $converter = false) {
         // Try to get config array from new table...
         $config = $this->sql->getFieldById('config', 'config_data', $name, 'config_name');
-        
+
         // ... otherwise try to get from an old table (alix5 and lower)
         if ((empty($config) || !is_array($config)) && false !== $oldname && $this->tableExists($oldname)) {
             $config = $this->sql->getById($name, '*', 1);
         }
-        
+
         // fallback = empty array
         if (empty($config) || !is_array($config)) {
              $config = array();
         }
-    
+
         // specific important data has priority
         $config = $important + $config;
-        
+
         // map conversion function to config
         if (is_callable($converter)) {
             array_walk($config, $converter);
         }
-    
+
         return $this->genericFillConfig($name, $config, $loadhook);
     }
-    
+
     // generic config filler
     // Update old data with new defaults and save config
     public function genericFillConfig($name, $old, $loadhook = 'none') {
         //data-array
         $data = $this->getDataArray($name);
-        
+
         // filter and fill with default config value
         $defaultConfig = $name.'Config';
         $config = array_intersect_key($old, $this->$defaultConfig); // remove keys not longer available
@@ -290,8 +290,8 @@ class SettingsMigrationSolver extends PairSolver {
             return false;
         }
         return true;
-    } 
-    
+    }
+
     // helper functions
     private function tableExists($tablename) {
         $table = $this->sql->doQuery("SHOW TABLES LIKE '{..pref..}".$tablename."'");
@@ -300,7 +300,7 @@ class SettingsMigrationSolver extends PairSolver {
         }
         return false;
     }
-    
+
     private function getDataArray($name, $loadhook = 'none') {
         return array(
             'config_name' => $name,
@@ -308,13 +308,13 @@ class SettingsMigrationSolver extends PairSolver {
             'config_data' => null
         );
     }
-    
-    
+
+
     // Default values
-    private $systemConfig = array('var_loop' => '20');    
-    private $envConfig = array();    
+    private $systemConfig = array('var_loop' => '20');
+    private $envConfig = array();
     private $infoConfig = array();
-    
+
     private $cronjobsConfig = array(
         'last_cronjob_time' => '0',
         'last_cronjob_time_daily' => '0',
@@ -326,8 +326,8 @@ class SettingsMigrationSolver extends PairSolver {
         'ref_contact' => 'first',
         'ref_age' => 'older',
         'ref_amount' => 'less'
-    );    
-    
+    );
+
 
     // `frogsystem_alix5`.`fs2_partner_config`
     private $affiliatesConfig = array(
@@ -340,7 +340,7 @@ class SettingsMigrationSolver extends PairSolver {
         'big_allow' => '1',
         'file_size' => '1024'
     );
-    
+
     // `frogsystem_alix5`.`fs2_articles_config`
     private $articlesConfig = array(
         'html_code' => '2',
@@ -349,7 +349,7 @@ class SettingsMigrationSolver extends PairSolver {
         'cat_pic_x' => '150',
         'cat_pic_y' => '150',
         'cat_pic_size' => '1024',
-        'com_rights' => '2', 
+        'com_rights' => '2',
         'com_antispam' => '2',
         'com_sort' => 'DESC',
         'acp_per_page' => '25',
@@ -391,7 +391,7 @@ class SettingsMigrationSolver extends PairSolver {
         'dl_show_sub_cats' => '0',
         'dl_comments' => '0',
     );
-    
+
     // `frogsystem_alix5`.`fs2_screen_config`
     private $screensConfig = array(
         'screen_x' => '3500',
@@ -424,7 +424,7 @@ class SettingsMigrationSolver extends PairSolver {
         'group_pic_x' => '250',
         'group_pic_y' => '25',
         'group_pic_size' => '50'
-    );    
+    );
 
     // `frogsystem_alix5`.`fs2_global_config`
     private $mainConfig = array(
@@ -580,7 +580,7 @@ class SettingsMigrationSolver extends PairSolver {
         'cfg_iconplaybgalpha' => '75',
         'cfg_showtitleandstartimage' => '0'
     );
-    
+
     private $social_meta_tagsConfig = array(
         'use_google_plus' => '',
         'google_plus_page' => '',

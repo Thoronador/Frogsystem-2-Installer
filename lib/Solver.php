@@ -9,19 +9,19 @@
  * a solver provieds possible solutions to pass all (or certain) checks
  */
 abstract class Solver extends Checker {
-    
+
     public function solve($solutions = true, $tests = true) {
         // load all solutions
         if ($solutions === true) {
             $solutions = $this->getDefaultSolutions();
         }
-        
-        try {     
+
+        try {
             // run first check
             try {
                 if ($this->check($tests)) { return true; }
             } catch (CheckerTestFailedException $e) {}
-            
+
             // run solutions
             foreach ($solutions as $solution) {
                 // try next solution & check on success
@@ -30,14 +30,14 @@ abstract class Solver extends Checker {
                         if ($this->check($tests)) { return true; }
                     } catch (CheckerTestFailedException $e) {}
                 }
-            } 
+            }
         }
         // rethrow others
-        catch (Exception $e) { throw $e; }        
-    
+        catch (Exception $e) { throw $e; }
+
         return false;
     }
-    
+
     public function getSolutions() {
         $methods = get_class_methods($this);
         return array_filter($methods, create_function('$m', 'return "solution" === substr($m, 0, 8);'));

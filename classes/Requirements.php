@@ -8,15 +8,15 @@
  * this class checks for the hardcore requirements like php and mysql
  * version
  */
- 
+
 class Requirements extends Checker {
-    
+
     private $failedExtensions = array();
-    
+
     public function getDefaultTests() {
         return $this->getTests();
     }
-    
+
     public static function testFS2Version() {
         return !(InstallerFunctions::compareFS2Versions(UPGRADE_FROM, InstallerFunctions::getRequiredFS2Version()) < 0);
     }
@@ -25,7 +25,7 @@ class Requirements extends Checker {
             return true;
         return Requirements::testFS2Version();
     }
-    
+
     public static function testPHPVersion() {
         return version_compare(PHP_VERSION, InstallerFunctions::getRequiredPHPVersion()) >= 0;
     }
@@ -43,17 +43,17 @@ class Requirements extends Checker {
             }
         }
         return $passed;
-    } 
-    
+    }
+
     public function getFailedExtensions() {
         return $this->failedExtensions;
     }
-    
+
     public static function phpExtensionCheck($module, $compare = false) {
         if ($compare) {
             return version_compare (phpversion($module), $compare ) >= 0;
         }
         return false !== phpversion($module);
-    } 
+    }
 }
-    
+

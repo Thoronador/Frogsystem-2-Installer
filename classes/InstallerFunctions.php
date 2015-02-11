@@ -12,7 +12,7 @@ class InstallerFunctions {
     public static function writeDBConnectionFile($host, $user, $password, $database, $prefix, $type = 'mysql', $charset = 'utf8') {
         // path within installer
         $file_path = new Path('copy/config/env.cfg.php', 'current');
-        
+
         // config
         $config = array(
             'DB_TYPE'       => $type,
@@ -72,7 +72,7 @@ class InstallerFunctions {
         if (!empty($version) && in_array($version, self::getFS2Versions())) {
             return $version;
         }
-        
+
         // old detection
         $files = array(
             '2.alix6' => array('config/db_connection.php', 'libs/class_StringCutter.php'),
@@ -167,7 +167,7 @@ class InstallerFunctions {
                             'host' => $config['DB_HOST'],
                             'user' => $config['DB_USER'],
                             'pass' => $config['DB_PASSWORD'],
-                            'data' => $config['DB_NAME'], 
+                            'data' => $config['DB_NAME'],
                             'pref' => $config['DB_PREFIX'],
                         );
 					} catch (Exception $e) {

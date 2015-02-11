@@ -9,7 +9,7 @@
  * a pairSolver tests and trys to solves a pair of equally named test and soultion
  */
 abstract class PairSolver extends Solver {
-    
+
     public function solve($pairs = true, $noop = false) {
         // load default pairs
         if ($pairs === true) {
@@ -18,7 +18,7 @@ abstract class PairSolver extends Solver {
         if (!is_array($pairs)) {
             $pairs = array($pairs);
         }
-		
+
 		// which are not solved?
 		$not_solved = array();
 		foreach ($pairs as $pair) {
@@ -26,18 +26,18 @@ abstract class PairSolver extends Solver {
                 $not_solved[] = $pair;
             }
 		}
-        
+
         return empty($not_solved);
     }
 
     public function getDefaultTests() {
 		return getDefaultPairs();
 	}
-	
+
     public function getDefaultSolutions() {
 		return getDefaultPairs();
 	}
-	
+
     abstract public function getDefaultPairs();
 }
 
